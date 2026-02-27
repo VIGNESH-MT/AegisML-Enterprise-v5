@@ -265,11 +265,6 @@ AegisML-Enterprise/
 
 ## Support & Licensing
 
-**Enterprise Support:** enterprise@aegisml.io
-**Documentation:** https://docs.aegisml.io
-**Status Page:** https://status.aegisml.io
-
-Licensed under the AegisML Commercial Enterprise Licence.
 Unauthorised redistribution prohibited.
 
 ---
