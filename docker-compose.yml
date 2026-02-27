@@ -1,0 +1,55 @@
+version: "3.9"
+
+# AegisML Enterprise — Docker Compose
+# Usage:
+#   docker compose up -d          (production)
+#   docker compose --profile dev up  (development with hot reload)
+
+services:
+
+  # ── FastAPI Backend ────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      target: runtime
+    image: aegisml-api:5.0.0
+    container_name: aegisml-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - AEGISML_ENV=${AEGISML_ENV:-production}
+      - AEGISML_SECRET_KEY=${AEGISML_SECRET_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - AEGISML_WEBHOOK_URL=${AEGISML_WEBHOOK_URL:-}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    volumes:
+      - reports:/app/verification
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ── Streamlit Dashboard ───────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      target: runtime
+    image: aegisml-dashboard:5.0.0
+    container_name: aegisml-dashboard
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - AEGISML_ENV=${AEGISML_ENV:-production}
+      - AEGISML_API_URL=http://api:8000
+    command: ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  reports:
+    name: aegisml-reports
